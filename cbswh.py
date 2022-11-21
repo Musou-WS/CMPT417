@@ -91,7 +91,7 @@ def min_vertex_cover(edges):
                 edges.remove(edge)
     return count
 
-def H_CG(collisions):
+def H_DG(collisions):
     count = 0
     while len(collisions) > 0:
         next_collision = collisions.pop()
@@ -102,7 +102,7 @@ def H_CG(collisions):
     return count
 
 # Brute-Force
-def H_CG_better(collisions, agentsNum):
+def H_DG_better(collisions, agentsNum):
     count = 0
     edges = []
     vers = [n for n in range(len(agentsNum))]
@@ -233,7 +233,7 @@ class CBSWHSolver(object):
                                 if i == (self.num_of_agents-1):
                                     new_node['collisions'] = detect_collisions(new_node['paths'])
                                     new_node['cost'] = get_sum_of_cost(new_node['paths'])
-                                    new_node['h'] = H_CG_better(copy.deepcopy(new_node['collisions']))
+                                    new_node['h'] = H_DG_better(copy.deepcopy(new_node['collisions']))
                                     self.push_node(new_node)
                             else:
                                 break
@@ -244,7 +244,7 @@ class CBSWHSolver(object):
                             new_node['paths'][new_agent] = copy.deepcopy(new_path)
                             new_node['collisions'] = detect_collisions(new_node['paths'])
                             new_node['cost'] = get_sum_of_cost(new_node['paths'])
-                            new_node['h'] = H_CG(copy.deepcopy(new_node['collisions']))
+                            new_node['h'] = H_DG_better(copy.deepcopy(new_node['collisions']))
                             self.push_node(new_node)
         raise BaseException('No solutions')
 
