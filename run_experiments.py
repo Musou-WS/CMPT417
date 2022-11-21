@@ -3,6 +3,7 @@ import argparse
 import glob
 from pathlib import Path
 from cbs import CBSSolver
+from cbswh import CBSWHSolver
 from independent import IndependentSolver
 from prioritized import PrioritizedPlanningSolver
 from visualize import Animation
@@ -95,6 +96,10 @@ if __name__ == '__main__':
             print("***Run CBS***")
             cbs = CBSSolver(my_map, starts, goals)
             paths = cbs.find_solution(args.disjoint)
+        elif args.solver == "CBSWH":
+            print("***Run CBSWH***")
+            cbswh = CBSWHSolver(my_map, starts, goals)
+            paths = cbswh.find_solution(args.disjoint)
         elif args.solver == "Independent":
             print("***Run Independent***")
             solver = IndependentSolver(my_map, starts, goals)

@@ -78,6 +78,20 @@ def disjoint_splitting(collision):
         constraints.append({'agent': collision['a2'], 'loc': collision['loc'][::-1], 'timestep': collision['timestep'], 'positive': False})
     return constraints
 
+#find min_vertex_cover
+def min_vertex_cover(edges):
+    c=[]
+    count = 0
+    while len(edges) > 0:
+        next_edge = edges.pop()
+        count += 1
+        for edge in edges:
+            if (edge[0] == next_edge[0]) or (edge[0] == next_edge[1]) or (edge[1] == next_edge[0]) or (edge[1] == next_edge[1]):
+                edges.remove(edge)
+    return count
+
+def H_CG():
+    pass
 
 class CBSSolver(object):
     """The high-level search of CBS."""
