@@ -3,6 +3,7 @@ import heapq
 import random
 from single_agent_planner import compute_heuristics, a_star, get_location, get_sum_of_cost
 import copy
+import itertools
 
 
 def detect_collision(path1, path2):
@@ -78,7 +79,7 @@ def disjoint_splitting(collision):
         constraints.append({'agent': collision['a2'], 'loc': collision['loc'][::-1], 'timestep': collision['timestep'], 'positive': False})
     return constraints
 
-#find min_vertex_cover
+#find 2-approximation of min_vertex_cover
 def min_vertex_cover(edges):
     c=[]
     count = 0
@@ -99,6 +100,27 @@ def H_CG(collisions):
             if (collision['a1'] == next_collision['a1']) or (collision['a1'] == next_collision['a2']) or (collision['a2'] == next_collision['a1']) or (collision['a2'] == next_collision['a2']):
                 collisions.remove(collision)
     return count
+
+# Brute-Force
+def H_CG_better(collisions, agentsNum):
+    count = 0
+    edges = []
+    vers = [n for n in range(len(agentsNum))]
+    for collision in collisions:
+        edges.append([collision['a1'], collision['a2']])
+    #forward
+    for num in range(len(vers)):
+        for versSelect in itertools.combinations(vers, i):
+            edgesTemp = copy.deepcopy(edges)
+            for edge in edgesTemp:
+                if (edge[0] in versSelect) or (edge[1] in versSelect):
+                    edges.remove(edge)
+            if len(edge) == 0:
+                count = num
+                break
+    return count
+
+
 
 class CBSWHSolver(object):
     """The high-level search of CBS."""
@@ -211,7 +233,7 @@ class CBSWHSolver(object):
                                 if i == (self.num_of_agents-1):
                                     new_node['collisions'] = detect_collisions(new_node['paths'])
                                     new_node['cost'] = get_sum_of_cost(new_node['paths'])
-                                    new_node['h'] = H_CG(copy.deepcopy(new_node['collisions']))
+                                    new_node['h'] = H_CG_better(copy.deepcopy(new_node['collisions']))
                                     self.push_node(new_node)
                             else:
                                 break
