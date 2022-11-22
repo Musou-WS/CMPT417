@@ -105,19 +105,19 @@ def H_DG(collisions):
 def H_DG_better(collisions, agentsNum):
     count = 0
     edges = []
-    vers = [n for n in range(len(agentsNum))]
+    vers = [n for n in range(agentsNum)]
     for collision in collisions:
         edges.append([collision['a1'], collision['a2']])
     #forward
     for num in range(len(vers)):
-        for versSelect in itertools.combinations(vers, i):
+        for versSelect in itertools.combinations(vers, num):
             edgesTemp = copy.deepcopy(edges)
-            for edge in edgesTemp:
+            for edge in edges:
                 if (edge[0] in versSelect) or (edge[1] in versSelect):
-                    edges.remove(edge)
-            if len(edge) == 0:
+                    edgesTemp.remove(edge)
+            if len(edgesTemp) == 0:
                 count = num
-                break
+                return num
     return count
 
 
@@ -205,7 +205,6 @@ class CBSWHSolver(object):
         #           Ensure to create a copy of any objects that your child nodes might inherit
         while len(self.open_list) > 0:
             next_node = self.pop_node()
-            print(next_node)
             if len(next_node['collisions']) == 0:
                 return next_node['paths']
             else:
@@ -233,7 +232,7 @@ class CBSWHSolver(object):
                                 if i == (self.num_of_agents-1):
                                     new_node['collisions'] = detect_collisions(new_node['paths'])
                                     new_node['cost'] = get_sum_of_cost(new_node['paths'])
-                                    new_node['h'] = H_DG_better(copy.deepcopy(new_node['collisions']))
+                                    new_node['h'] = H_DG_better(copy.deepcopy(new_node['collisions']), len(new_node['paths']))
                                     self.push_node(new_node)
                             else:
                                 break
@@ -244,7 +243,7 @@ class CBSWHSolver(object):
                             new_node['paths'][new_agent] = copy.deepcopy(new_path)
                             new_node['collisions'] = detect_collisions(new_node['paths'])
                             new_node['cost'] = get_sum_of_cost(new_node['paths'])
-                            new_node['h'] = H_DG_better(copy.deepcopy(new_node['collisions']))
+                            new_node['h'] = H_DG_better(copy.deepcopy(new_node['collisions']), len(new_node['paths']))
                             self.push_node(new_node)
         raise BaseException('No solutions')
 
