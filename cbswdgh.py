@@ -6,6 +6,7 @@ import copy
 import itertools
 import numpy as np
 from scipy.optimize import linprog
+import pulp as pp
 
 def detect_collision(path1, path2):
     ##############################
@@ -133,6 +134,7 @@ def H_DG_better(collisions, agentsNum):
                 return num
     return count
 
+
 def H_WDG(collisions, agentsNum):
     count = 0
     edges = []
@@ -158,7 +160,6 @@ def H_WDG(collisions, agentsNum):
 
 # More Complex Linear Algebra
 def H_WDG_better(collisions, agentsNum):
-    count = 0
     # init linear data
     c = np.array([1 for vertex in range(agentsNum)]) # min sum of wv
     inel = [] # left sides of inequations
@@ -172,15 +173,34 @@ def H_WDG_better(collisions, agentsNum):
         iner.append(-collision['count'])
     inelFinal = np.array(inel)
     inerFinal = np.array(iner)
-    print(inelFinal)
-    print(inerFinal)
     if len(iner) == 0:
         return 0
     else:
         res = linprog(c, inelFinal, inerFinal, bounds = b)
-        print("aaa")
-        print(res.x)
         return res.x.sum()
+
+# Integer Algebra
+def H_IWDG(collisions, agentsNum):
+    # init linear data
+    c = np.array([1 for vertex in range(agentsNum)]) # min sum of wv
+    inel = [] # left sides of inequations
+    iner = [] # right sides of inequations
+    for collision in collisions:
+        templ = [0 for vertex in range(agentsNum)]
+        templ[collision['a1']] = 1
+        templ[collision['a2']] = 1
+        inel.append(copy.deepcopy(templ))
+        iner.append(collision['count'])
+    m = pp.LpProblem(sense = pp.LpMinimize)
+    x = [pp.LpVariable(f'x{vertex}', lowBound = 0, cat='Integer') for vertex in range(agentsNum)]
+    m += pp.lpDot(c, x)
+    for i in range(len(inel)):
+        m += (pp.lpDot(inel[i], x) >= iner[i])
+    if len(iner) == 0:
+        return 0
+    else:
+        m.solve(pp.PULP_CBC_CMD(msg=False))
+        return int(pp.value(m.objective))
 
 class CBSWDGHSolver(object):
     """The high-level search of CBS."""
@@ -306,8 +326,8 @@ class CBSWDGHSolver(object):
                             print(new_node['cost'])
                             print(H_DG_better(copy.deepcopy(new_node['collisions']), len(new_node['paths'])))
                             print(H_WDG_better(copy.deepcopy(new_node['collisions']), len(new_node['paths'])))
-                            print(new_node['collisions'])
-                            new_node['h'] = H_WDG_better(copy.deepcopy(new_node['collisions']), len(new_node['paths']))
+                            print(H_IWDG(copy.deepcopy(new_node['collisions']), len(new_node['paths'])))
+                            new_node['h'] = H_IWDG(copy.deepcopy(new_node['collisions']), len(new_node['paths']))
                             self.push_node(new_node)
         raise BaseException('No solutions')
 
