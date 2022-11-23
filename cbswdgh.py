@@ -4,7 +4,8 @@ import random
 from single_agent_planner import compute_heuristics, a_star, get_location, get_sum_of_cost
 import copy
 import itertools
-
+import numpy as np
+from scipy.optimize import linprog
 
 def detect_collision(path1, path2):
     ##############################
@@ -13,18 +14,30 @@ def detect_collision(path1, path2):
     #           A vertex collision occurs if both robots occupy the same location at the same timestep
     #           An edge collision occurs if the robots swap their location at the same timestep.
     #           You should use "get_location(path, t)" to get the location of a robot at time t.
+    # instead of return the first collision, return the number of collisions
     time = max(len(path1), len(path2))
+    count = 0
+    collision = {}
     for i in range(time):
         loc1 = [get_location(path1, i-1), get_location(path1, i)]
         loc2 = [get_location(path2, i-1), get_location(path2, i)]
         # vertex collision
         if loc1[1] == loc2[1]:
-            return {'loc': [loc1[1]], 'timestep': i}
+            count += 1
+            if len(collision) == 0:
+                collision = {'loc': [loc1[1]], 'timestep': i}
         elif (loc1[0] == loc2[1]) & (loc1[1] == loc2[0]):
-            return {'loc': [loc1[0], loc1[1]], 'timestep': i}
+            count += 1
+            if len(collision) == 0:
+                collision = {'loc': [loc1[0], loc1[1]], 'timestep': i}
         else:
             continue
-    return None
+    if count > 0:
+        collision['count'] = count
+    if len(collision) != 0:
+        return collision
+    else:
+        return None
 
 
 def detect_collisions(paths):
@@ -91,7 +104,6 @@ def min_vertex_cover(edges):
                 edges.remove(edge)
     return count
 
-
 def H_DG(collisions):
     count = 0
     while len(collisions) > 0:
@@ -121,8 +133,56 @@ def H_DG_better(collisions, agentsNum):
                 return num
     return count
 
+def H_WDG(collisions, agentsNum):
+    count = 0
+    edges = []
+    vers = [n for n in range(agentsNum)]
+    # vertex weights
+    w = [0 for m in range(agentsNum)]
+    # edge weights
+    ew = []
+    for collision in collisions:
+        edges.append([collision['a1'], collision['a2']])
+        ew.append(collision['count'])
+    #forward
+    for num in range(len(vers)):
+        for versSelect in itertools.combinations(vers, num):
+            edgesTemp = copy.deepcopy(edges)
+            for edge in edges:
+                if (edge[0] in versSelect) or (edge[1] in versSelect):
+                    edgesTemp.remove(edge)
+            if len(edgesTemp) == 0:
+                count = num
+                return num
+    return count
 
-class CBSWHSolver(object):
+# More Complex Linear Algebra
+def H_WDG_better(collisions, agentsNum):
+    count = 0
+    # init linear data
+    c = np.array([1 for vertex in range(agentsNum)]) # min sum of wv
+    inel = [] # left sides of inequations
+    iner = [] # right sides of inequations
+    b = tuple((0, None) for vertex in range(agentsNum)) # bounds for wv solutions
+    for collision in collisions:
+        templ = [0 for vertex in range(agentsNum)]
+        templ[collision['a1']] = -1
+        templ[collision['a2']] = -1
+        inel.append(copy.deepcopy(templ))
+        iner.append(-collision['count'])
+    inelFinal = np.array(inel)
+    inerFinal = np.array(iner)
+    print(inelFinal)
+    print(inerFinal)
+    if len(iner) == 0:
+        return 0
+    else:
+        res = linprog(c, inelFinal, inerFinal, bounds = b)
+        print("aaa")
+        print(res.x)
+        return res.x.sum()
+
+class CBSWDGHSolver(object):
     """The high-level search of CBS."""
 
     def __init__(self, my_map, starts, goals):
@@ -232,7 +292,7 @@ class CBSWHSolver(object):
                                 if i == (self.num_of_agents-1):
                                     new_node['collisions'] = detect_collisions(new_node['paths'])
                                     new_node['cost'] = get_sum_of_cost(new_node['paths'])
-                                    new_node['h'] = H_DG_better(copy.deepcopy(new_node['collisions']), len(new_node['paths']))
+                                    new_node['h'] = H_WDG_better(copy.deepcopy(new_node['collisions']), len(new_node['paths']))
                                     self.push_node(new_node)
                             else:
                                 break
@@ -243,7 +303,11 @@ class CBSWHSolver(object):
                             new_node['paths'][new_agent] = copy.deepcopy(new_path)
                             new_node['collisions'] = detect_collisions(new_node['paths'])
                             new_node['cost'] = get_sum_of_cost(new_node['paths'])
-                            new_node['h'] = H_DG_better(copy.deepcopy(new_node['collisions']), len(new_node['paths']))
+                            print(new_node['cost'])
+                            print(H_DG_better(copy.deepcopy(new_node['collisions']), len(new_node['paths'])))
+                            print(H_WDG_better(copy.deepcopy(new_node['collisions']), len(new_node['paths'])))
+                            print(new_node['collisions'])
+                            new_node['h'] = H_WDG_better(copy.deepcopy(new_node['collisions']), len(new_node['paths']))
                             self.push_node(new_node)
         raise BaseException('No solutions')
 
