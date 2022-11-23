@@ -9,6 +9,7 @@ from independent import IndependentSolver
 from prioritized import PrioritizedPlanningSolver
 from visualize import Animation
 from single_agent_planner import get_sum_of_cost
+import time
 
 SOLVER = "CBS"
 
@@ -85,7 +86,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
 
-    result_file = open("results.csv", "w", buffering=1)
+    result_file = open("results" + args.solver + ".csv", "w", buffering=1)
+    result_file.write("{},{},{},{},{}\n".format('file', 'cost', 'time', 'generate', 'expande'))
 
     for file in sorted(glob.glob(args.instance)):
 
@@ -93,18 +95,23 @@ if __name__ == '__main__':
         my_map, starts, goals = import_mapf_instance(file)
         print_mapf_instance(my_map, starts, goals)
 
+        # start time
+        starttime = time.time()
+        num_of_generated = "Unknown"
+        num_of_expanded = "Unknown"
+
         if args.solver == "CBS":
             print("***Run CBS***")
             cbs = CBSSolver(my_map, starts, goals)
-            paths = cbs.find_solution(args.disjoint)
+            [paths, num_of_generated, num_of_expanded] = cbs.find_solution(args.disjoint)
         elif args.solver == "CBSWH":
             print("***Run CBSWH***")
             cbswh = CBSWHSolver(my_map, starts, goals)
-            paths = cbswh.find_solution(args.disjoint)
+            [paths, num_of_generated, num_of_expanded] = cbswh.find_solution(args.disjoint)
         elif args.solver == "CBSWDGH":
             print("***Run CBSWDGH***")
             cbswdgh = CBSWDGHSolver(my_map, starts, goals)
-            paths = cbswdgh.find_solution(args.disjoint)
+            [paths, num_of_generated, num_of_expanded] = cbswdgh.find_solution(args.disjoint)
         elif args.solver == "Independent":
             print("***Run Independent***")
             solver = IndependentSolver(my_map, starts, goals)
@@ -120,8 +127,13 @@ if __name__ == '__main__':
         else:
             raise RuntimeError("Unknown solver!")
 
+        # end time
+        endtime = time.time()
+        # run time
+        runtime = round(endtime - starttime, 2)
+
         cost = get_sum_of_cost(paths)
-        result_file.write("{},{}\n".format(file, cost))
+        result_file.write("{},{},{},{},{}\n".format(file, cost, runtime, num_of_generated, num_of_expanded))
 
 
         if not args.batch:

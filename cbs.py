@@ -176,7 +176,7 @@ class CBSSolver(object):
         while len(self.open_list) > 0:
             next_node = self.pop_node()
             if len(next_node['collisions']) == 0:
-                return next_node['paths']
+                return [next_node['paths'], self.num_of_generated, self.num_of_expanded]
             else:
                 next_constraints = []
                 if disjoint:
