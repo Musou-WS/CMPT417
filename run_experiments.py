@@ -115,7 +115,7 @@ if __name__ == '__main__':
             [paths, num_of_generated, num_of_expanded] = cbswdgh.find_solution(args.disjoint)
         elif args.solver == "CBSWHL":
             print("***Run CBSWHL***")
-            cbswhl = CBSWDGHSolver(my_map, starts, goals)
+            cbswhl = CBSWHLSolver(my_map, starts, goals)
             [paths, num_of_generated, num_of_expanded] = cbswhl.find_solution(args.disjoint)
         elif args.solver == "Independent":
             print("***Run Independent***")

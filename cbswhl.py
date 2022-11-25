@@ -278,7 +278,8 @@ class CBSWHLSolver(object):
                 'constraints': [],
                 'paths': [],
                 'collisions': [],
-                'h': 0}
+                'h': 0,
+                'ish': True}
         for i in range(self.num_of_agents):  # Find initial path for each agent
             path = a_star(self.my_map, self.starts[i], self.goals[i], self.heuristics[i],
                           i, root['constraints'])
@@ -314,6 +315,7 @@ class CBSWHLSolver(object):
                     next_node['h'] = H_WDG_round(copy.deepcopy(next_node['collisions']), len(next_node['paths']))
                     next_node['ish'] = True
                     self.push_node(next_node)
+                    continue
                 next_constraints = []
                 if disjoint:
                     next_constraints = disjoint_splitting(next_node['collisions'][0])
