@@ -312,10 +312,12 @@ class CBSWHLSolver(object):
                 return [next_node['paths'], self.num_of_generated, self.num_of_expanded]
             else:
                 if not next_node['ish']:
-                    next_node['h'] = H_WDG_round(copy.deepcopy(next_node['collisions']), len(next_node['paths']))
-                    next_node['ish'] = True
-                    self.push_node(next_node)
-                    continue
+                    htemp = H_WDG_round(copy.deepcopy(next_node['collisions']), len(next_node['paths']))
+                    if htemp > next_node['h']:
+                        next_node['h'] = H_WDG_round(copy.deepcopy(next_node['collisions']), len(next_node['paths']))
+                        next_node['ish'] = True
+                        self.push_node(next_node)
+                        continue
                 next_constraints = []
                 if disjoint:
                     next_constraints = disjoint_splitting(next_node['collisions'][0])
