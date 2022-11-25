@@ -345,7 +345,7 @@ class CBSWDGHSolver(object):
                             new_node['paths'][new_agent] = copy.deepcopy(new_path)
                             new_node['collisions'] = detect_collisions(new_node['paths'])
                             new_node['cost'] = get_sum_of_cost(new_node['paths'])
-                            new_node['h'] = H_WDG_better(copy.deepcopy(new_node['collisions']), len(new_node['paths']))
+                            new_node['h'] = H_IWDG(copy.deepcopy(new_node['collisions']), len(new_node['paths']))
                             self.push_node(new_node)
         raise BaseException('No solutions')
 

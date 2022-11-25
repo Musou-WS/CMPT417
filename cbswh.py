@@ -92,7 +92,7 @@ def min_vertex_cover(edges):
     return count
 
 
-def H_DG(collisions):
+def H_DG(collisions, agentsNum):
     count = 0
     while len(collisions) > 0:
         next_collision = collisions.pop()
