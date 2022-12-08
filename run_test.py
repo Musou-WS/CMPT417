@@ -38,11 +38,15 @@ def print_locations(my_map, locations):
     print(to_print)
 
 
-def import_mapf_instance(filename):
-    f = Path(filename)
+def import_mapf_instance(agents, instance, num):
+    f = Path(instance)
+    a = Path(agents)
     if not f.is_file():
-        raise BaseException(filename + " does not exist.")
-    f = open(filename, 'r')
+        raise BaseException(instance + " does not exist.")
+    if not a.is_file():
+        raise BaseException(agents + " does not exist.")
+    f = open(instance, 'r')
+    a = open(agents, 'r')
     # first line: #rows #columns
     line = f.readline()
     rows, columns = [int(x) for x in line.split(' ')]
@@ -53,31 +57,31 @@ def import_mapf_instance(filename):
     for r in range(rows):
         line = f.readline()
         my_map.append([])
-        for cell in line:
-            if cell == '@':
+        for i in range(len(line)-1):
+            if line[i] == '@':
                 my_map[-1].append(True)
-            elif cell == '.':
+            elif line[i] == '.':
+                my_map[-1].append(False)
+            else:
                 my_map[-1].append(False)
     # #agents
-    line = f.readline()
-    num_agents = int(line)
+    line = a.readline()
+    num_agents = int(num)
     # #agents lines with the start/goal positions
     starts = []
     goals = []
-    for a in range(num_agents):
-        line = f.readline()
-        d1, d2, d3, d4, sx, sy, gx, gy, d9 = [int(x) for x in line.split(' ')]
-        print(d1)
-        print(d2)
-        print(d3)
-        print(d4)
-        print(sx)
-        print(sy)
-        print(gx)
-        print(gy)
-        print(d9)
-        starts.append((sx, sy))
-        goals.append((gx, gy))
+    s = 0
+    while s < num_agents:
+        line = a.readline()
+        arrLine = [x for x in line.split('\t')]
+        sx = int(arrLine[4])
+        sy = int(arrLine[5])
+        gx = int(arrLine[6])
+        gy = int(arrLine[7])
+        if not (my_map[sx][sy] or my_map[gx][gy]):
+            starts.append((int(sx), int(sy)))
+            goals.append((int(gx), int(gy)))
+            s += 1
     f.close()
     return my_map, starts, goals
 
@@ -86,23 +90,27 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Runs various MAPF algorithms')
     parser.add_argument('--instance', type=str, default=None,
                         help='The name of the instance file(s)')
+    parser.add_argument('--agents', type=str, default=None,
+                        help='The name of the agent file(s)')
     parser.add_argument('--batch', action='store_true', default=False,
                         help='Use batch output instead of animation')
     parser.add_argument('--disjoint', action='store_true', default=False,
                         help='Use the disjoint splitting')
     parser.add_argument('--solver', type=str, default=SOLVER,
                         help='The solver to use (one of: {CBS,Independent,Prioritized}), defaults to ' + str(SOLVER))
+    parser.add_argument('--num', type=int, default=2,
+                        help='The number of agents, defaults to 2')
 
     args = parser.parse_args()
 
 
     result_file = open("results" + args.solver + ".csv", "w", buffering=1)
-    result_file.write("{},{},{},{},{}\n".format('file', 'cost', 'time', 'generate', 'expande'))
+    result_file.write("{},{},{},{},{}\n".format('agents', 'cost', 'time', 'generate', 'expande'))
 
-    for file in sorted(glob.glob(args.instance)):
+    for agents in sorted(glob.glob(args.agents)):
 
         print("***Import an instance***")
-        my_map, starts, goals = import_mapf_instance(file)
+        my_map, starts, goals = import_mapf_instance(agents, args.instance, args.num)
         print_mapf_instance(my_map, starts, goals)
 
         # start time
@@ -147,7 +155,7 @@ if __name__ == '__main__':
         runtime = round(endtime - starttime, 2)
 
         cost = get_sum_of_cost(paths)
-        result_file.write("{},{},{},{},{}\n".format(file, cost, runtime, num_of_generated, num_of_expanded))
+        result_file.write("{},{},{},{},{}\n".format(agents, cost, runtime, num_of_generated, num_of_expanded))
 
 
         if not args.batch:
