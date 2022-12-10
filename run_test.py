@@ -63,7 +63,7 @@ def import_mapf_instance(agents, instance, num):
             elif line[i] == '.':
                 my_map[-1].append(False)
             else:
-                my_map[-1].append(False)
+                my_map[-1].append(True)
     # #agents
     line = a.readline()
     num_agents = int(num)
@@ -105,7 +105,7 @@ if __name__ == '__main__':
 
 
     result_file = open("results" + args.solver + ".csv", "w", buffering=1)
-    result_file.write("{},{},{},{},{}\n".format('agents', 'cost', 'time', 'generate', 'expande'))
+    result_file.write("{},{},{},{},{},{}\n".format('agents', 'cost', 'time', 'generate', 'expande', 'collisionSum'))
 
     for agents in sorted(glob.glob(args.agents)):
 
@@ -129,7 +129,7 @@ if __name__ == '__main__':
         elif args.solver == "CBSWDGH":
             print("***Run CBSWDGH***")
             cbswdgh = CBSWDGHSolver(my_map, starts, goals)
-            [paths, num_of_generated, num_of_expanded] = cbswdgh.find_solution(args.disjoint)
+            [paths, num_of_generated, num_of_expanded, collisionSum] = cbswdgh.find_solution(args.disjoint)
         elif args.solver == "CBSWHL":
             print("***Run CBSWHL***")
             cbswhl = CBSWHLSolver(my_map, starts, goals)
@@ -155,7 +155,10 @@ if __name__ == '__main__':
         runtime = round(endtime - starttime, 2)
 
         cost = get_sum_of_cost(paths)
-        result_file.write("{},{},{},{},{}\n".format(agents, cost, runtime, num_of_generated, num_of_expanded))
+        if args.solver == "CBSWDGH":
+            result_file.write("{},{},{},{},{},{}\n".format(agents, cost, runtime, num_of_generated, num_of_expanded, collisionSum))
+        else:
+            result_file.write("{},{},{},{},{}\n".format(agents, cost, runtime, num_of_generated, num_of_expanded))
 
 
         if not args.batch:

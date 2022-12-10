@@ -224,6 +224,12 @@ def H_IWDG(collisions, agentsNum):
         m.solve(pp.PULP_CBC_CMD(msg=False))
         return int(pp.value(m.objective))
 
+def collisionSum(collisions):
+    collisionSum = 0
+    for collision in collisions:
+        collisionSum += collision['count']
+    return collisionSum
+
 class CBSWDGHSolver(object):
     """The high-level search of CBS."""
 
@@ -246,6 +252,7 @@ class CBSWDGHSolver(object):
 
         # compute heuristics for the low-level search
         self.heuristics = []
+        self.collisionSum = 0
         for goal in self.goals:
             self.heuristics.append(compute_heuristics(my_map, goal))
 
@@ -288,6 +295,7 @@ class CBSWDGHSolver(object):
 
         root['cost'] = get_sum_of_cost(root['paths'])
         root['collisions'] = detect_collisions(root['paths'])
+        self.collisionSum = collisionSum(root['collisions'])
         self.push_node(root)
 
         # Task 3.1: Testing
@@ -308,7 +316,7 @@ class CBSWDGHSolver(object):
         while len(self.open_list) > 0:
             next_node = self.pop_node()
             if len(next_node['collisions']) == 0:
-                return [next_node['paths'], self.num_of_generated, self.num_of_expanded]
+                return [next_node['paths'], self.num_of_generated, self.num_of_expanded, self.collisionSum]
             else:
                 next_constraints = []
                 if disjoint:

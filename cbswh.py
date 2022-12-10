@@ -121,6 +121,12 @@ def H_DG_better(collisions, agentsNum):
                 return num
     return count
 
+# collision sum
+def collisionSum(collisions):
+    collisionSum = 0
+    for collision in collisions:
+        collisionSum += collision['count']
+    return collisionSum
 
 class CBSWHSolver(object):
     """The high-level search of CBS."""
