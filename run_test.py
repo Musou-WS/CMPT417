@@ -105,7 +105,7 @@ if __name__ == '__main__':
 
 
     result_file = open("results" + args.solver + ".csv", "w", buffering=1)
-    result_file.write("{},{},{},{},{},{}\n".format('agents', 'cost', 'time', 'generate', 'expande', 'collisionSum'))
+    result_file.write("{},{},{},{},{},{}\n".format('agents', 'cost', 'time', 'generate', 'expande', 'collisionMax'))
 
     for agents in sorted(glob.glob(args.agents)):
 
@@ -129,7 +129,7 @@ if __name__ == '__main__':
         elif args.solver == "CBSWDGH":
             print("***Run CBSWDGH***")
             cbswdgh = CBSWDGHSolver(my_map, starts, goals)
-            [paths, num_of_generated, num_of_expanded, collisionSum] = cbswdgh.find_solution(args.disjoint)
+            [paths, num_of_generated, num_of_expanded, collisionMax] = cbswdgh.find_solution(args.disjoint)
         elif args.solver == "CBSWHL":
             print("***Run CBSWHL***")
             cbswhl = CBSWHLSolver(my_map, starts, goals)
@@ -156,7 +156,7 @@ if __name__ == '__main__':
 
         cost = get_sum_of_cost(paths)
         if args.solver == "CBSWDGH":
-            result_file.write("{},{},{},{},{},{}\n".format(agents, cost, runtime, num_of_generated, num_of_expanded, collisionSum))
+            result_file.write("{},{},{},{},{},{}\n".format(agents, cost, runtime, num_of_generated, num_of_expanded, collisionMax))
         else:
             result_file.write("{},{},{},{},{}\n".format(agents, cost, runtime, num_of_generated, num_of_expanded))
 

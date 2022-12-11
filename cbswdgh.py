@@ -230,6 +230,13 @@ def collisionSum(collisions):
         collisionSum += collision['count']
     return collisionSum
 
+def collisionMax(collisions):
+    collisionMax = 0
+    for collision in collisions:
+        if collision['count'] > collisionMax:
+            collisionMax = collision['count']
+    return collisionMax
+
 class CBSWDGHSolver(object):
     """The high-level search of CBS."""
 
@@ -253,6 +260,7 @@ class CBSWDGHSolver(object):
         # compute heuristics for the low-level search
         self.heuristics = []
         self.collisionSum = 0
+        self.collisionMax = 0
         for goal in self.goals:
             self.heuristics.append(compute_heuristics(my_map, goal))
 
@@ -296,6 +304,7 @@ class CBSWDGHSolver(object):
         root['cost'] = get_sum_of_cost(root['paths'])
         root['collisions'] = detect_collisions(root['paths'])
         self.collisionSum = collisionSum(root['collisions'])
+        self.collisionMax = collisionMax(root['collisions'])
         self.push_node(root)
 
         # Task 3.1: Testing
@@ -316,7 +325,7 @@ class CBSWDGHSolver(object):
         while len(self.open_list) > 0:
             next_node = self.pop_node()
             if len(next_node['collisions']) == 0:
-                return [next_node['paths'], self.num_of_generated, self.num_of_expanded, self.collisionSum]
+                return [next_node['paths'], self.num_of_generated, self.num_of_expanded, self.collisionMax]
             else:
                 next_constraints = []
                 if disjoint:
